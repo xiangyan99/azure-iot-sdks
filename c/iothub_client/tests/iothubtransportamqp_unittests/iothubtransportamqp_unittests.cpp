@@ -6,6 +6,8 @@
 #include <crtdbg.h>
 #endif
 
+#define __STDC_LIMIT_MACROS
+#include <stdint.h>
 #include <csignal>
 
 #include "testrunnerswitcher.h"
