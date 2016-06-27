@@ -10,8 +10,8 @@
 #include "iothub_client.h"
 #include "serializer.h"
 #include "schemaserializer.h"
-#include "threadapi.h"
-#include "platform.h"
+#include "azure_c_shared_utility/threadapi.h"
+#include "azure_c_shared_utility/platform.h"
 
 #ifdef MBED_BUILD_TIMESTAMP
 #include "certs.h"
@@ -149,6 +149,7 @@ void remote_monitoring_run(void)
             IOTHUB_CLIENT_CONFIG config;
             IOTHUB_CLIENT_HANDLE iotHubClientHandle;
 
+            config.deviceSasToken = NULL;
             config.deviceId = deviceId;
             config.deviceKey = deviceKey;
             config.iotHubName = hubName;

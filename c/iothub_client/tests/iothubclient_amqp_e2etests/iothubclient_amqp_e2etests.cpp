@@ -17,9 +17,9 @@
 #include "iothub_account.h"
 #include "iothubtest.h"
 
-#include "buffer_.h"
-#include "threadapi.h"
-#include "platform.h"
+#include "azure_c_shared_utility/buffer_.h"
+#include "azure_c_shared_utility/threadapi.h"
+#include "azure_c_shared_utility/platform.h"
 
 static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
 static bool g_callbackRecv = false;
@@ -115,6 +115,21 @@ BEGIN_TEST_SUITE(iothubclient_amqp_e2etests)
         {
         if (notifyData != NULL)
         {
+			const char* messageId;
+			const char* correlationId;
+
+			if ((messageId = IoTHubMessage_GetMessageId(msg)) == NULL)
+			{
+				messageId = "<null>";
+			}
+
+			if ((correlationId = IoTHubMessage_GetCorrelationId(msg)) == NULL)
+			{
+				correlationId = "<null>";
+			}
+
+			printf("Received new message from IoT Hub (message-id: %s, correlation-id: %s)", messageId, correlationId);
+
             const char* buffer;
             size_t size;
             IoTHubMessage_GetByteArray(msg, (const unsigned char**)&buffer, &size);
@@ -252,7 +267,7 @@ BEGIN_TEST_SUITE(iothubclient_amqp_e2etests)
     TEST_SUITE_INITIALIZE(TestClassInitialize)
     {
         ASSERT_ARE_EQUAL(int, 0, platform_init());
-        INITIALIZE_MEMORY_DEBUG(g_dllByDll);
+        TEST_INITIALIZE_MEMORY_DEBUG(g_dllByDll);
         platform_init();
         g_iothubAcctInfo = IoTHubAccount_Init(true, "amqp_e2e_tests");
         ASSERT_IS_NOT_NULL(g_iothubAcctInfo);
@@ -264,7 +279,7 @@ BEGIN_TEST_SUITE(iothubclient_amqp_e2etests)
         IoTHubAccount_deinit(g_iothubAcctInfo);
         // Need a double deinit
         platform_deinit();
-        DEINITIALIZE_MEMORY_DEBUG(g_dllByDll);
+        TEST_DEINITIALIZE_MEMORY_DEBUG(g_dllByDll);
         platform_deinit();
     }
 

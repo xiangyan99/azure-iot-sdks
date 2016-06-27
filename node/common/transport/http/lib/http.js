@@ -4,6 +4,7 @@
 'use strict';
 
 var Message = require('azure-iot-common').Message;
+var debug = require('debug')('azure-iot-common.Http');
 
 /**
  * @class           module:azure-iot-http-base.Http
@@ -31,16 +32,29 @@ function Http() {
     path - the path to the resource, not including the hostname
     httpHeaders - an object whose properties represent the names and values of HTTP headers to include in the request
     host - the fully-qualified DNS hostname of the IoT hub
+    x509Options - [optional] the x509 certificate, key and passphrase that are needed to connect to the service using x509 certificate authentication
     done - a callback that will be invoked when a completed response is returned from the server]*/
-Http.prototype.buildRequest = function (method, path, httpHeaders, host, done) {
-  var options = {
+Http.prototype.buildRequest = function (method, path, httpHeaders, host, x509Options, done) {
+  if (!done && (typeof x509Options === 'function')) {
+    done = x509Options;
+    x509Options = null;
+  }
+
+  var httpOptions = {
     host: host,
     path: path,
     method: method,
     headers: httpHeaders
   };
 
-  var request = this._https.request(options, function onResponse(response) {
+  /*Codes_SRS_NODE_HTTP_16_001: [If `x509Options` is specified, the certificate, key and passphrase in the structure shall be used to authenticate the connection.]*/
+  if (x509Options) {
+    httpOptions.cert = x509Options.cert;
+    httpOptions.key = x509Options.key;
+    httpOptions.passphrase = x509Options.passphrase;
+  }
+
+  var request = this._https.request(httpOptions, function onResponse(response) {
     var responseBody = '';
     response.on('error', function (err) {
       done(err);
@@ -109,6 +123,42 @@ Http.prototype.toMessage = function toMessage(response, body) {
   }
 
   return msg;
+};
+
+
+/**
+ * @method              module:azure-iot-http-base.Http#parseErrorBody
+ * @description         Parses the body of an error response and returns it as an object.
+ *
+ * @params {String}     body  The body of the HTTP error response
+ * @returns {Object}    An object with 2 properties: code and message.
+ */
+Http.parseErrorBody = function parseError (body) {
+  var result = null;
+
+  try {
+    var jsonErr = JSON.parse(body);
+    var errParts = jsonErr.Message.split(';');
+    var errMessage = errParts[1].slice(1, -1);
+    var errCode = errParts[0].split(':')[1];
+
+    if(!!errCode && !!errMessage) {
+      result = {
+        message: errMessage,
+        code: errCode
+      };
+    }
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      debug('Could not parse error body: Invalid JSON');
+    } else if (err instanceof TypeError) {
+      debug('Could not parse error body: Unknown body format');
+    } else {
+      throw err;
+    }
+  }
+
+  return result;
 };
 
 module.exports = Http;

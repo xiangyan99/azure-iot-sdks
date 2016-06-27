@@ -1,3 +1,5 @@
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
 # Microsoft Azure IoT SDKs
 
 This repository contains both IoT device SDKs and IoT service SDKs. Device SDKs enable you connect client devices to Azure IoT Hub. Service SDKs enable you to manage your IoT Hub service instance.
@@ -23,7 +25,15 @@ Each language SDK includes sample code and documentation in addition to the libr
 
 ### OS platforms and hardware compatibility
 
-Azure IoT device SDKs can be used with a broad range of OS platforms and devices. See [OS Platforms and hardware compatibility](https://azure.microsoft.com/documentation/articles/iot-hub-tested-configurations/).
+Azure IoT device SDKs can be used with a broad range of OS platforms and devices. The minimum requirements are for the device platform to support the following:
+
+- Being capable of establishing an IP connection: only IP-capable devices can communicate directly with Azure IoT Hub.
+- Support TLS: required to establish a secure communication channel with Azure IoT Hub.
+- Support SHA-256: necessary to generate the secure token for authenticating the device with the service.
+- Have a Real Time Clock or implement code to connect to an NTP server: necessary for both establishing the TLS connection and generating the secure token for authentication.
+- Having at least 64KB of RAM: the memory footprint of the SDK depends on the SDK and protocol used as well as the platform targeted. The smallest footprint is achieved using the C SDK targeting microcontrollers.
+
+You can find an exhaustive list of the OS platforms the various SDKs have been tested against on our [OS Platforms and hardware compatibility](https://azure.microsoft.com/documentation/articles/iot-hub-tested-configurations/) page. Note that you might still be able to use the SDKs on OS and hardware platforms that are not listed on this page: all the SDKs are open sourced and designed to be portable. If you have suggestions, feedback or issues to report, refer to the Contribution and Support sections below.
 
 ## Microsoft Azure IoT service SDKs
 
@@ -73,15 +83,13 @@ And if you are looking for end to end samples that show how to do simple analyti
    - [Bulk Registry sample](node/service/samples/registry_sample.js): Shows how to create a set of device IDs in the device ID registry of IoT Hub in bulk from a Node.js application.
    - [Simple Cloud to Device messaging sample](node/service/samples/send_c2d_message.js) : Shows how to send messages to a device from a Node.js application through IoT Hub.
 - Python device SDK:   
-   - [Sample using AMQP](python/device/samples/iothub_client_sample_amqp.py): shows how to connect to IoT Hub and send and receive messages using the AMQP protocol.
-   - [Sample using HTTP](python/device/samples/iothub_client_sample_http.py): shows how to connect to IoT Hub and send and receive messages using the HTTP protocol.
-   - [Sample using MQTT](python/device/samples/iothub_client_sample_mqtt.py): shows how to connect to IoT Hub and send and receive messages using the MQTT protocol.
+   - [Simple Sample](python/device/samples/iothub_client_sample.py): shows how to connect to IoT Hub and send and receive messages using the AMQP, MQTT or HTTP protocol.
+   - [Class Sample using AMQP](python/device/samples/iothub_client_sample_class.py): shows how to connect to IoT Hub with a HubManager class to send and receive messages using the AMQP protocol.
 
 
 ## Contribution, feedback and issues
 
-If you would like to become an active contributor to this project please follow the instructions provided in the [contribution guidelines](contribute.md).
-If you encounter any bugs or have suggestions for new features, please file an issue in the [Issues](https://github.com/Azure/azure-iot-sdks/issues) section of the project.
+If you encounter any bugs, have suggestions for new features or if you would like to become an active contributor to this project please follow the instructions provided in the [contribution guidelines](CONTRIBUTING.md).
 
 ## Support
 

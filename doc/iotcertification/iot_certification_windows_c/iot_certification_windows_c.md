@@ -31,8 +31,7 @@ This document provides step by step guidance to IoT hardware publishers on how t
 
 **Prepare**
 
-Before executing any of the steps below, read through each process, step
-by step to ensure end to end understanding.
+Before executing any of the steps below, read through each process, step by step to ensure end to end understanding. 
 
 You should have the following items ready before beginning the process:
 
@@ -87,9 +86,7 @@ To run DeviceExplorer tool, use following configuration string as described in [
     
     f. Save this information in Notepad. You will need this information in later steps.
 
-**Not running Windows on your PC?** - Please send us an email on 
-<iotcert@microsoft.com> and we will follow up with you witAzure IoT SDKh
-instructions.
+***Not running Windows on your PC?*** - Please follow the instructions [here](<https://github.com/Azure/azure-iot-sdks/blob/master/doc/manage_iot_hub.md>) to provision your device and get its credentials.
 
 <a name="Step_3_Build_and_Validate"/>
 # Step 3: Build and Validate the Sample using C Client Libraries 
@@ -107,9 +104,13 @@ This section walks you through building, deploying and validating the IoT Client
 <a name="Step_3_2_Build"/>
 ## 3.2  Build the Samples
 
-1.  Start a new instance of Visual Studio 2015. Open the **azure_iot_sdks.sln** solution in the **cmake** folder in your home directory.
+1. Follow the instructions [here](<https://github.com/Azure/azure-iot-sdks/blob/master/c/doc/devbox_setup.md>) to prepare your development environment. 
 
-2.  In Visual Studio, from **Solution Explorer**, navigate to project based on your choice of protocol:
+2. A folder **cmake_Win32** will be created under your user profile folder e.g. **c:\user\[yourusername]\cmake_Win32**. 
+
+3. Start a new instance of Visual Studio 2015. Open the **azure_iot_sdks.sln** solution in the **cmake_Win32** folder.
+
+4.  In Visual Studio, from **Solution Explorer**, navigate to project based on your choice of protocol:
 
 	**For AMQP protocol:**
 
@@ -126,11 +127,11 @@ This section walks you through building, deploying and validating the IoT Client
 	![Navigate\_file](images/navigate_simplesampleamqp.png)
 
 
-3.  Find the following place holder for IoT connection string:
+5.  Find the following place holder for IoT connection string:
 
   		static const char* connectionString = "[device connection string]";
 	
-4.  Replace the above placeholder with device connection string. You can get this from DeviceExplorer as explained in [Step 2](#Step_2_Register), that you copied into Notepad.
+6.  Replace the above placeholder with device connection string. You can get this from DeviceExplorer as explained in [Step 2](#Step_2_Register), that you copied into Notepad.
 
 	![Replace\_device\_connection\_string](images/project_amqp_config.png)
 
@@ -218,9 +219,9 @@ Package the following artifacts from your device:
 2. All the screenshots that are shown above in "**Send Device Events to IoT Hub**" section.
 3.  All the screenshots that are shown above in "**Receive messages from IoT Hub**" section.
 4.  Send us clear instructions of how to run this sample with your hardware
-    (explicitly highlighting the new steps for customers). As a
-    guideline on how the instructions should look please refer the
-    examples published on github repository [here](https://github.com/Azure/azure-iot-sdks/tree/master/csharp/doc).
+    (explicitly highlighting the new steps for customers). Please use the template available [here](<https://github.com/Azure/azure-iot-sdks/blob/master/doc/iotcertification/templates/template-windows-c.md>) to create your device-specific instructions.
+    
+    As a guideline on how the instructions should look please refer the examples published on GitHub repository [here](<https://github.com/Azure/azure-iot-sdks/tree/master/doc/get_started>).
 
 <a name="Step_4_2_Share"/>
 ## 4.2 Share package with the Azure IoT Certification Team

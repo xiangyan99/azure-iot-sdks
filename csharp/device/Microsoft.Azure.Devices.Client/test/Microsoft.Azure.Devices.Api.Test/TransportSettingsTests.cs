@@ -5,11 +5,15 @@ namespace Microsoft.Azure.Devices.Client.Test
 {
     using System;
     using Microsoft.Azure.Devices.Client;
+    using Microsoft.Azure.Devices.Client.ApiTest;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class TransportSettingsTests
     {
+        const string LocalCertFilename = "..\\..\\Microsoft.Azure.Devices.Api.Test\\LocalNoChain.pfx";
+        const string LocalCertPasswordFile = "..\\..\\Microsoft.Azure.Devices.Api.Test\\TestCertsPassword.txt";
+
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
         [TestMethod]
         [TestCategory("CIT")]
@@ -34,7 +38,8 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("TransportSettings")]
         public void TransportSettingsTest_TransportType_AmqpTcp_Prefetch_0()
         {
-            var transportSetting = new AmqpTransportSettings(TransportType.Amqp_Tcp_Only, 0);
+            var amqpConnectionPoolSettings = new AmqpConnectionPoolSettings();
+            var transportSetting = new AmqpTransportSettings(TransportType.Amqp_Tcp_Only, 0, amqpConnectionPoolSettings);
         }
 
         [TestMethod]
@@ -52,7 +57,8 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("TransportSettings")]
         public void TransportSettingsTest_TransportType_Amqp_WebSocket_Tcp()
         {
-            var transportSetting = new AmqpTransportSettings(TransportType.Amqp_Tcp_Only, 200);
+            var amqpConnectionPoolSettings = new AmqpConnectionPoolSettings();
+            var transportSetting = new AmqpTransportSettings(TransportType.Amqp_Tcp_Only, 200, amqpConnectionPoolSettings);
             Assert.IsTrue(transportSetting.GetTransportType() == TransportType.Amqp_Tcp_Only, "Should be TransportType.Amqp_Tcp_Only");
             Assert.IsTrue(transportSetting.PrefetchCount == 200, "Should be value of 200");
         }
@@ -64,6 +70,121 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             var transportSetting = new Http1TransportSettings();
             Assert.IsTrue(transportSetting.GetTransportType() == TransportType.Http1, "Should be TransportType.Http1");
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [TestCategory("TransportSettings")]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TransportSettingsTest_ZeroOperationTimeout()
+        {
+            var amqpConnectionPoolSettings = new AmqpConnectionPoolSettings();
+            var transportSetting = new AmqpTransportSettings(TransportType.Amqp, 200, amqpConnectionPoolSettings);
+            transportSetting.OperationTimeout = TimeSpan.Zero;
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [TestCategory("TransportSettings")]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TransportSettingsTest_ZeroOpenTimeout()
+        {
+            var amqpConnectionPoolSettings = new AmqpConnectionPoolSettings();
+            var transportSetting = new AmqpTransportSettings(TransportType.Amqp, 200, amqpConnectionPoolSettings);
+            transportSetting.OpenTimeout = TimeSpan.Zero;
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [TestCategory("TransportSettings")]
+        public void TransportSettingsTest_Timeouts()
+        {
+            var amqpConnectionPoolSettings = new AmqpConnectionPoolSettings();
+            var transportSetting = new AmqpTransportSettings(TransportType.Amqp_WebSocket_Only, 200, amqpConnectionPoolSettings);
+            transportSetting.OpenTimeout = TimeSpan.FromMinutes(5);
+            transportSetting.OperationTimeout = TimeSpan.FromMinutes(10);
+            Assert.IsTrue(transportSetting.OpenTimeout == TimeSpan.FromMinutes(5), "OpenTimeout not set correctly");
+            Assert.IsTrue(transportSetting.OperationTimeout == TimeSpan.FromMinutes(10), "OperationTimeout not set correctly");
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [TestCategory("TransportSettings")]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void ConnectionPoolSettingsTest_ZeroPoolSize()
+        {
+            var connectionPoolSettings = new AmqpConnectionPoolSettings();
+            connectionPoolSettings.MaxPoolSize = 0;
+            var transportSetting = new AmqpTransportSettings(TransportType.Amqp, 200, connectionPoolSettings);
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [TestCategory("TransportSettings")]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void ConnectionPoolSettingsTest_4SecsIdleTimeout()
+        {
+            var connectionPoolSettings = new AmqpConnectionPoolSettings();
+            connectionPoolSettings.ConnectionIdleTimeout = TimeSpan.FromSeconds(4);
+            var transportSetting = new AmqpTransportSettings(TransportType.Amqp, 200, connectionPoolSettings);
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [TestCategory("TransportSettings")]
+        public void ConnectionPoolSettingsTest_MaxPoolSizeTest()
+        {
+            var connectionPoolSettings = new AmqpConnectionPoolSettings();
+            connectionPoolSettings.MaxPoolSize = ushort.MaxValue;
+            var transportSetting = new AmqpTransportSettings(TransportType.Amqp_Tcp_Only, 200, connectionPoolSettings);
+            Assert.IsTrue(transportSetting.AmqpConnectionPoolSettings.MaxPoolSize == ushort.MaxValue, "MaxPoolSize should be 64K");
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [TestCategory("TransportSettings")]
+        public void ConnectionPoolSettingsTest_PoolingOff()
+        {
+            var connectionPoolSettings = new AmqpConnectionPoolSettings();
+            connectionPoolSettings.Pooling = false;
+            var transportSetting = new AmqpTransportSettings(TransportType.Amqp_Tcp_Only, 200, connectionPoolSettings);
+            Assert.IsTrue(transportSetting.AmqpConnectionPoolSettings.Pooling == false, "Pooling should be off");
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [TestCategory("TransportSettings")]
+        public void X509Certificate_AmqpTransportSettingsTest()
+        {
+            string hostName = "acme.azure-devices.net";
+            var cert = CertificateHelper.InstallCertificateFromFile(LocalCertFilename, LocalCertPasswordFile);
+            var authMethod = new DeviceAuthenticationWithX509Certificate("device1", cert);
+
+            var deviceClient = DeviceClient.Create(hostName, authMethod, new ITransportSettings[] { new AmqpTransportSettings(TransportType.Amqp_Tcp_Only, 100) });
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [TestCategory("TransportSettings")]
+        public void X509Certificate_Http1TransportSettingsTest()
+        {
+            string hostName = "acme.azure-devices.net";
+            var cert = CertificateHelper.InstallCertificateFromFile(LocalCertFilename, LocalCertPasswordFile);
+            var authMethod = new DeviceAuthenticationWithX509Certificate("device1", cert);
+
+            var deviceClient = DeviceClient.Create(hostName, authMethod, new ITransportSettings[] { new Http1TransportSettings()});
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [TestCategory("TransportSettings")]
+        [ExpectedException(typeof(ArgumentException))]
+        public void NullX509Certificate_AmqpTransportSettingsTest()
+        {
+            string hostName = "acme.azure-devices.net";
+            var authMethod = new DeviceAuthenticationWithX509Certificate("device1", null);
+
+            var deviceClient = DeviceClient.Create(hostName, authMethod, new ITransportSettings[] { new AmqpTransportSettings(TransportType.Amqp_Tcp_Only, 100) });
         }
     }
 }

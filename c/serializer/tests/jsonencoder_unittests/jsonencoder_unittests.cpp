@@ -7,12 +7,12 @@
 #endif
 
 #include "testrunnerswitcher.h"
-#include "crt_abstractions.h"
+#include "azure_c_shared_utility/crt_abstractions.h"
 #include "micromock.h"
 #include "micromockcharstararenullterminatedstrings.h"
 #include <stdexcept>
 #include "multitree.h"
-#include "buffer_.h"
+#include "azure_c_shared_utility/buffer_.h"
 
 /*this is what we test*/
 #include "jsonencoder.h"
@@ -624,7 +624,7 @@ BEGIN_TEST_SUITE(JSONEncoder_UnitTests)
 
         TEST_SUITE_INITIALIZE(TestClassInitialize)
         {
-            INITIALIZE_MEMORY_DEBUG(g_dllByDll);
+            TEST_INITIALIZE_MEMORY_DEBUG(g_dllByDll);
 
             g_testByTest = MicroMockCreateMutex();
             ASSERT_IS_NOT_NULL(g_testByTest);
@@ -635,7 +635,7 @@ BEGIN_TEST_SUITE(JSONEncoder_UnitTests)
         {
             delete mocks;
             MicroMockDestroyMutex(g_testByTest);
-            DEINITIALIZE_MEMORY_DEBUG(g_dllByDll);
+            TEST_DEINITIALIZE_MEMORY_DEBUG(g_dllByDll);
 
         }
 

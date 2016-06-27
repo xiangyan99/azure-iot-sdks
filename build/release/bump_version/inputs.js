@@ -24,9 +24,9 @@ module.exports = [
     {
         "taskType": "regexReplaceTask",
         "filePath": "build/release/release_mbed_project.cmd",
-        "search": "(hg\\_commit\\_message\%\"\ \-m)([ ]+)(\".*\")",
+        "search": "(hg\\_commit\\_message\\=)(\".*\")",
         "replaceString": function(versions) {
-            return '$1' + '$2' + '"' + versions.c.device + '"';
+            return '$1' + '"' + versions.c.device + '"';
         }
     },
     {
@@ -46,34 +46,232 @@ module.exports = [
         }
     },
     {
-        "taskType": "xmlReplaceTask",
+        "taskType": "regexReplaceTask",
+        "filePath": "c/iothub_client/tests/iothubclient_ll_u2b_unittests/iothub_client_ll_u2b_unittests.c",
+        "search": "(TEST\\_IOTHUB\\_SDK\\_VERSION)([ ]+)(\".*\")",
+        "replaceString": function(versions) {
+            return '$1' + '$2' + '"' + versions.c.device + '"';
+        }
+    },
+    ///////////////////////////////////////////////////
+    // C SDK nugets
+    ///////////////////////////////////////////////////
+    {
+        "taskType": "multiTask",
         "filePath": "c/build_all/packaging/windows/Microsoft.Azure.IoTHub.AmqpTransport.nuspec",
-        "search": "//*[local-name(.)='package' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']/*[local-name(.)='metadata' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']/*[local-name(.)='version' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']",
-        "replaceString": "c_nuget.device"
+        "search": [
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.IoTHub.IoTHubClient']/@version",
+                "replaceString": "c_nuget.device"
+            },
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.C.SharedUtility']/@version",
+                "replaceString": "c_shared_utility_nuget"
+            },
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.Uamqp']/@version",
+                "replaceString": "uamqp_c_nuget"
+            },
+            {
+                "taskType": "xmlReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:version",
+                "replaceString":"c_nuget.device"
+            }
+        ]
     },
     {
-        "taskType": "xmlReplaceTask",
+        "taskType": "multiTask",
         "filePath": "c/build_all/packaging/windows/Microsoft.Azure.IoTHub.HttpTransport.nuspec",
-        "search": "//*[local-name(.)='package' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']/*[local-name(.)='metadata' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']/*[local-name(.)='version' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']",
-        "replaceString": "c_nuget.device"
+        "search": [
+            {
+                "taskType": "xmlReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:version",
+                "replaceString": "c_nuget.device"
+            },
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.IoTHub.IoTHubClient']/@version",
+                "replaceString": "c_nuget.device"
+            },
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.C.SharedUtility']/@version",
+                "replaceString": "c_shared_utility_nuget"
+            }
+        ]
     },
     {
-        "taskType": "xmlReplaceTask",
+        "taskType": "multiTask",
         "filePath": "c/build_all/packaging/windows/Microsoft.Azure.IoTHub.IoTHubClient.nuspec",
-        "search": "//*[local-name(.)='package' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']/*[local-name(.)='metadata' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']/*[local-name(.)='version' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']",
-        "replaceString": "c_nuget.device"
+        "search": [
+            {
+                "taskType": "xmlReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:version",
+                "replaceString": "c_nuget.device"
+            },
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.C.SharedUtility']/@version",
+                "replaceString": "c_shared_utility_nuget"
+            }
+        ]
     },
     {
-        "taskType": "xmlReplaceTask",
+        "taskType": "multiTask",
         "filePath": "c/build_all/packaging/windows/Microsoft.Azure.IoTHub.MqttTransport.nuspec",
-        "search": "//*[local-name(.)='package' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']/*[local-name(.)='metadata' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']/*[local-name(.)='version' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']",
-        "replaceString": "c_nuget.device"
+        "search": [
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.IoTHub.IoTHubClient']/@version",
+                "replaceString": "c_nuget.device"
+            },
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.C.SharedUtility']/@version",
+                "replaceString": "c_shared_utility_nuget"
+            },
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.umqtt']/@version",
+                "replaceString": "umqtt_c_nuget"
+            },
+            {
+                "taskType": "xmlReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:version",
+                "replaceString":"c_nuget.device"
+            }
+        ]
     },
     {
-        "taskType": "xmlReplaceTask",
+        "taskType": "multiTask",
         "filePath": "c/build_all/packaging/windows/Microsoft.Azure.IoTHub.Serializer.nuspec",
-        "search": "//*[local-name(.)='package' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']/*[local-name(.)='metadata' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']/*[local-name(.)='version' and namespace-uri(.)='http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd']",
-        "replaceString": "c_nuget.device"
+        "search": [
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.C.SharedUtility']/@version",
+                "replaceString": "c_shared_utility_nuget"
+            },
+            {
+                "taskType": "xmlReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:version",
+                "replaceString":"c_nuget.device"
+            }
+        ]
+    },
+    ///////////////////////////////////////////////////
+    // C uamqp nuget
+    ///////////////////////////////////////////////////
+    {
+        "taskType": "multiTask",
+        "filePath": "c/azure-uamqp-c/build_all/Packaging/windows/Microsoft.Azure.uamqp.nuspec",
+        "search": [
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.C.SharedUtility']/@version",
+                "replaceString": "c_shared_utility_nuget"
+            },
+            {
+                "taskType": "xmlReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:version",
+                "replaceString": "uamqp_c_nuget"
+            }
+        ]
+    },
+    ///////////////////////////////////////////////////
+    // C shared utility nuget
+    ///////////////////////////////////////////////////
+    {
+        "taskType": "multiTask",
+        "filePath": "c/azure-c-shared-utility/build_all/Packaging/windows/Microsoft.Azure.C.SharedUtility.nuspec",
+        "search": [
+            {
+                "taskType": "xmlReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:version",
+                "replaceString": "c_shared_utility_nuget"
+            }
+        ]
+    },
+    ///////////////////////////////////////////////////
+    // C umqtt nuget
+    ///////////////////////////////////////////////////
+    {
+        "taskType": "multiTask",
+        "filePath": "c/azure-umqtt-c/build_all/Packaging/windows/Microsoft.Azure.umqtt.nuspec",
+        "search": [
+            {
+                "taskType": "xmlAttributeReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:dependencies/nu:dependency[@id = 'Microsoft.Azure.C.SharedUtility']/@version",
+                "replaceString": "c_shared_utility_nuget"
+            },
+            {
+                "taskType": "xmlReplaceTask",
+                "nsmap": {
+                    "nu": "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+                    },
+                "search": "//nu:package/nu:metadata/nu:version",
+               "replaceString": "umqtt_c_nuget"
+            }
+        ]
     },
     ///////////////////////////////////////////////////
     // C# Device SDK
@@ -93,7 +291,7 @@ module.exports = [
         "replaceString": function(versions) {
             return '$1' + versions.csharp.devicepcl + '$2';
         }
-    },	
+    },
     {
         "taskType": "regexReplaceTask",
         "filePath": "csharp/device/Microsoft.Azure.Devices.Client.WinRT/Properties/AssemblyInfo.cs",
@@ -102,6 +300,15 @@ module.exports = [
             return '$1' + versions.csharp.device + '$2';
         }
     },
+    {
+        "taskType": "regexReplaceTask",
+        "filePath": "csharp/device/Microsoft.Azure.Devices.Client/IotHubConnection.cs",
+        "search": "(UWPAssemblyVersion[ \t]*=[ \t]*\").*(\")",
+        "replaceString": function(versions) {
+            return '$1' + versions.csharp.device + '$2';
+        }
+    },
+
     ///////////////////////////////////////////////////
     // C# Service SDK
     ///////////////////////////////////////////////////
@@ -113,6 +320,23 @@ module.exports = [
             return '$1' + versions.csharp.service + '$2';
         }
     },
+    {
+        "taskType": "regexReplaceTask",
+        "filePath": "csharp/service/Microsoft.Azure.Devices.Uwp/Properties/AssemblyInfo.cs",
+        "search": "(AssemblyInformationalVersion\\(\").*(\"\\)\\])",
+        "replaceString": function(versions) {
+            return '$1' + versions.csharp.service + '$2';
+        }
+    },
+
+    {
+        "taskType": "regexReplaceTask",
+        "filePath": "csharp/service/Microsoft.Azure.Devices/Common/Utils.cs",
+        "search": "(UWPAssemblyVersion[ \t]*=[ \t]*\").*(\")",
+        "replaceString": function(versions) {
+            return '$1' + versions.csharp.service + '$2';
+        }
+    },    
 
     ///////////////////////////////////////////////////
     // Java Device SDK files
@@ -163,19 +387,19 @@ module.exports = [
         "search": "//project/parent/version",
         "replaceString": "java.device"
     },
-	{
+    {
         "taskType": "xmlReplaceTask",
         "filePath": "java/device/samples/send-receive-sample/pom.xml",
         "search": "//project/parent/version",
         "replaceString": "java.device"
     },
-	{
-		"taskType": "regexReplaceTask",
-		"filePath": "java/device/iothub-java-client/src/main/java/com/microsoft/azure/iothub/transport/TransportUtils.java",
-		"search": "(clientVersion =)([ ]+)(\".*\")",
-		"replaceString": function(versions) {
-			return '$1' + '$2' + '"' + versions.java.device + '"';
-		}
+    {
+        "taskType": "regexReplaceTask",
+        "filePath": "java/device/iothub-java-client/src/main/java/com/microsoft/azure/iothub/transport/TransportUtils.java",
+        "search": "(clientVersion =)([ ]+)(\".*\")",
+        "replaceString": function(versions) {
+            return '$1' + '$2' + '"' + versions.java.device + '"';
+        }
     },
     ///////////////////////////////////////////////////
     // Java Service SDK files
@@ -240,13 +464,13 @@ module.exports = [
             }
         ]
     },
-		{
-		"taskType": "regexReplaceTask",
-		"filePath": "java/service/iothub-service-sdk/src/main/java/com/microsoft/azure/iot/service/transport/TransportUtils.java",
-		"search": "(serviceVersion =)([ ]+)(\".*\")",
-		"replaceString": function(versions) {
-			return '$1' + '$2' + '"' + versions.java.service + '"';
-		}
+        {
+        "taskType": "regexReplaceTask",
+        "filePath": "java/service/iothub-service-sdk/src/main/java/com/microsoft/azure/iot/service/transport/TransportUtils.java",
+        "search": "(serviceVersion =)([ ]+)(\".*\")",
+        "replaceString": function(versions) {
+            return '$1' + '$2' + '"' + versions.java.service + '"';
+        }
     },
     ///////////////////////////////////////////////////
     // Node SDK package.json files
@@ -407,7 +631,7 @@ module.exports = [
             },
             {
                 "taskType": "jsonReplaceTask",
-                "search": "devDependencies.azure-iot-common",
+                "search": "dependencies.azure-iot-common",
                 "replaceString": "node.common"
             }
         ]
@@ -540,6 +764,11 @@ module.exports = [
                 "taskType": "jsonReplaceTask",
                 "search": "dependencies.azure-iot-common",
                 "replaceString": "node.common"
+            },
+            {
+                "taskType": "jsonReplaceTask",
+                "search": "dependencies.azure-iot-device",
+                "replaceString": "node.device"
             },
             {
                 "taskType": "jsonReplaceTask",

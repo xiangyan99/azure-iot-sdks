@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-var EventEmitter = require('events');
+var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 
 var FakeMqtt = function() {
@@ -21,13 +21,9 @@ var FakeMqtt = function() {
     }
   };
 
-  setTimeout(function(){
-    this.emit('connect');
-  }.bind(this), 0);
-};
-
-FakeMqtt.connect = function() {
-  return new FakeMqtt();
+  this.connect = function() {
+    return this;
+  };
 };
 
 util.inherits(FakeMqtt, EventEmitter);

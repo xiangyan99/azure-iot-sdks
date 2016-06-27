@@ -80,9 +80,9 @@ The following instructions outline how you can build the libraries in Windows:
 
 3. Ensure that the git.exe application is in your system path.
 
-4. Open a Visual Studio 2015 x86 Native Tools command prompt.
+4. Open a Developer Command Prompt for VS2015.
 
-5. Run the script **build\_client.cmd** in the **c\\build_all\\windows** directory.
+5. Run the script **build_client.cmd** in the **c\\build_all\\windows** directory.
 
 
 > Note: To enable support to AMQP over WebSockets, 
@@ -97,7 +97,7 @@ This section shows you how to set up a development environment for the Azure IoT
 
 **Note:** this setup process requires **cmake** version 3.x or higher and **gcc** version 4.9 or higher. You can verify the current version installed in your environment using the `cmake --version` command. For information about how to upgrade your version of cmake to 3.x on Ubuntu 14.04, see http://askubuntu.com/questions/610291/how-to-install-cmake-3-2-on-ubuntu-14-04.
 
-this library requires **gcc** version 4.9 or higher. You can verify the current version installed in your environment using the `gcc --version` command. For information about how to upgrade your version of gcc on Ubuntu 14.04, see http://askubuntu.com/questions/466651/how-do-i-use-the-latest-gcc-4-9-on-ubuntu-14-04.
+this library requires **gcc** version 4.9. You can verify the current version installed in your environment using the `gcc --version` command. For information about how to upgrade your version of gcc on Ubuntu 14.04, see http://askubuntu.com/questions/466651/how-do-i-use-the-latest-gcc-4-9-on-ubuntu-14-04.
 
 1. Clone the latest version of this repository to your Ubuntu machine with the recursive parameter
 ```
@@ -115,7 +115,7 @@ This script uses **cmake** to make a folder called "cmake" in your home director
 
 > Note: Every time you run `build.sh`, it deletes and then recreates the "cmake" folder in your home directory.
 
-> Note: You will not be able to run the samples until you configure them with a valid IoT Hub device connection string. For more information, see [Run sample on Linux](run_sample_on_desktop_linux.md).
+> Note: You will not be able to run the samples until you configure them with a valid IoT Hub device connection string. For more information, see [Run sample on Linux](../../doc/get_started/linux-desktop-c.md).
 
 <a name="windowsce"/>
 ## Set up a Windows Embedded Compact 2013 development environment
@@ -146,12 +146,12 @@ You can build the Windows samples to verify that your environment is set up corr
 3. Run the following command:
 
 ```
-build.cmd --skip-e2e-tests
+build.cmd
 ```
 
 This script uses cmake to make a folder called "cmake_ce8" in your home directory and generates in that folder a Visual Studio solution called azure_iot_sdks.sln. The script will then proceed to build the solution and run tests.
 
-> Note: you will not be able to run the samples until you configure them with a valid IoT hub device connection string. For more information, see [running a C sample application on Windows Embedded Compact 2013 on a Toradex module](run_sample_on_toradex_wec2013.md).
+> Note: you will not be able to run the samples until you configure them with a valid IoT hub device connection string. For more information, see [running a C sample application on Windows Embedded Compact 2013 on a Toradex module](../../doc/get_started/wince2013-toradex-module-c.md).
 
 To view the projects and examine the source code, open the **azure_iot_sdks.sln** solution files in Visual Studio.
 
@@ -166,4 +166,4 @@ This repository contains various C sample applications that illustrate how to us
 [readme]: ../readme.md
 [device-explorer]: ../../tools/DeviceExplorer/readme.md
 [toradex-CE8-sdk]:http://docs.toradex.com/102578
-[application-builder]:http://www.microsoft.com/en-us/download/details.aspx?id=38819
+[application-builder]:http://www.microsoft.com/download/details.aspx?id=38819

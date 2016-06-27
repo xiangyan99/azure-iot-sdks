@@ -5,12 +5,16 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
 {
     using System;
     using Microsoft.Azure.Devices.Client;
+    using Microsoft.Azure.Devices.Client.ApiTest;
     using Microsoft.Azure.Devices.Client.Transport;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class DeviceClientConnectionStringTests
     {
+        const string LocalCertFilename = "..\\..\\Microsoft.Azure.Devices.Api.Test\\LocalNoChain.pfx";
+        const string LocalCertPasswordFile = "..\\..\\Microsoft.Azure.Devices.Api.Test\\TestCertsPassword.txt";
+
         [TestMethod]
         [TestCategory("CIT")]
         public void DeviceClient_Create_DeviceScope_SharedAccessSignature_Test()
@@ -25,8 +29,8 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
             var authMethod = new DeviceAuthenticationWithToken("device1", sasRule.ToSignature());
             var deviceClient = AmqpTransportHandler.Create(hostName, authMethod);
 
-            Assert.IsNotNull(deviceClient.Connection);
-            Assert.IsNotNull(deviceClient.Connection.ConnectionString);
+            Assert.IsNotNull(deviceClient.IotHubConnection);
+            Assert.IsNotNull(((IotHubSingleTokenConnection)deviceClient.IotHubConnection).ConnectionString);
         }
 
         [TestMethod]
@@ -36,8 +40,8 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
             string connectionString = "HostName=acme.azure-devices.net;SharedAccessKeyName=AllAccessKey;DeviceId=device1;SharedAccessKey=CQN2K33r45/0WeIjpqmErV5EIvX8JZrozt3NEHCEkG8=";
             var deviceClient = AmqpTransportHandler.CreateFromConnectionString(connectionString);
 
-            Assert.IsNotNull(deviceClient.Connection);
-            Assert.IsNotNull(deviceClient.Connection.ConnectionString);
+            Assert.IsNotNull(deviceClient.IotHubConnection);
+            Assert.IsNotNull(((IotHubSingleTokenConnection)deviceClient.IotHubConnection).ConnectionString);
             var iotHubConnectionStringBuilder = IotHubConnectionStringBuilder.Create(connectionString);
         }
 
@@ -46,66 +50,119 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
         [TestCategory("CIT")]
         public void DeviceClient_ConnectionString_IotHubScope_ImplicitSharedAccessSignatureCredentialType_Test()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=IotHub;CredentialType=SharedAccessSignature;DeviceId=device1;SharedAccessKeyName=AllAccessKey;SharedAccessKey=CQN2K33r45/0WeIjpqmErV5EIvX8JZrozt3NEHCEkG8=";
+            string connectionString = "HostName=acme.azure-devices.net;DeviceId=device1;SharedAccessKeyName=AllAccessKey;SharedAccessKey=CQN2K33r45/0WeIjpqmErV5EIvX8JZrozt3NEHCEkG8=";
             var deviceClient = AmqpTransportHandler.CreateFromConnectionString(connectionString);
 
-            Assert.IsNotNull(deviceClient.Connection);
-            Assert.IsNotNull(deviceClient.Connection.ConnectionString);
+            Assert.IsNotNull(deviceClient.IotHubConnection);
+            Assert.IsNotNull(((IotHubSingleTokenConnection)deviceClient.IotHubConnection).ConnectionString);
         }
 
         [TestMethod]
         [TestCategory("CIT")]
         public void DeviceClient_ConnectionString_IotHubScope_ExplicitSharedAccessSignatureCredentialType_Test()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=IotHub;DeviceId=device1;SharedAccessSignature=SharedAccessSignature sr=dh%3a%2f%2facme.azure-devices.net&sig=poifbMLdBGtCJknubF2FW6FLn5vND5k1IKoeQ%2bONgkE%3d&se=87824124985&skn=AllAccessKey";
+            string connectionString = "HostName=acme.azure-devices.net;DeviceId=device1;SharedAccessSignature=SharedAccessSignature sr=dh%3a%2f%2facme.azure-devices.net&sig=poifbMLdBGtCJknubF2FW6FLn5vND5k1IKoeQ%2bONgkE%3d&se=87824124985&skn=AllAccessKey";
             var deviceClient = AmqpTransportHandler.CreateFromConnectionString(connectionString);
 
-            Assert.IsNotNull(deviceClient.Connection);
-            Assert.IsNotNull(deviceClient.Connection.ConnectionString);
+            Assert.IsNotNull(deviceClient.IotHubConnection);
+            Assert.IsNotNull(((IotHubSingleTokenConnection)deviceClient.IotHubConnection).ConnectionString);
         }
 
         [TestMethod]
         [TestCategory("CIT")]
         public void DeviceClient_ConnectionString_IotHubScope_SharedAccessKeyCredentialType_Test()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=IotHub;CredentialType=SharedAccessKey;DeviceId=device1;SharedAccessKeyName=AllAccessKey;SharedAccessKey=CQN2K33r45/0WeIjpqmErV5EIvX8JZrozt3NEHCEkG8=";
+            string connectionString = "HostName=acme.azure-devices.net;DeviceId=device1;SharedAccessKeyName=AllAccessKey;SharedAccessKey=CQN2K33r45/0WeIjpqmErV5EIvX8JZrozt3NEHCEkG8=";
             var deviceClient = AmqpTransportHandler.CreateFromConnectionString(connectionString);
 
-            Assert.IsNotNull(deviceClient.Connection);
-            Assert.IsNotNull(deviceClient.Connection.ConnectionString);
+            Assert.IsNotNull(deviceClient.IotHubConnection);
+            Assert.IsNotNull(((IotHubSingleTokenConnection)deviceClient.IotHubConnection).ConnectionString);
         }
 
         [TestMethod]
         [TestCategory("CIT")]
-        public void DeviceClient_ConnectionString_DeviceScope_ImplicitSharedAccessSignatureCredentialType_Test()
+        public void DeviceClient_ConnectionString_X509Certificate_DefaultTest()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=Device;CredentialType=SharedAccessSignature;DeviceId=device1;SharedAccessKey=CQN2K33r45/0WeIjpqmErV5EIvX8JZrozt3NEHCEkG8=";
-            var deviceClient = AmqpTransportHandler.CreateFromConnectionString(connectionString);
+            string hostName = "acme.azure-devices.net";
+            var cert = CertificateHelper.InstallCertificateFromFile(LocalCertFilename, LocalCertPasswordFile);
+            var authMethod = new DeviceAuthenticationWithX509Certificate("device1", cert);
 
-            Assert.IsNotNull(deviceClient.Connection);
-            Assert.IsNotNull(deviceClient.Connection.ConnectionString);
+            var deviceClient = DeviceClient.Create(hostName, authMethod);
         }
 
         [TestMethod]
         [TestCategory("CIT")]
-        public void DeviceClient_ConnectionString_DeviceScope_ExplicitSharedAccessSignatureCredentialType_Test()
+        public void DeviceClient_ConnectionString_X509Cert_Test()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=Device;CredentialType=SharedAccessSignature;DeviceId=device1;SharedAccessSignature=SharedAccessSignature sr=dh%3a%2f%2facme.azure-devices.net&sig=poifbMLdBGtCJknubF2FW6FLn5vND5k1IKoeQ%2bONgkE%3d&se=87824124985&skn=AllAccessKey";
-            var deviceClient = AmqpTransportHandler.CreateFromConnectionString(connectionString);
-
-            Assert.IsNotNull(deviceClient.Connection);
-            Assert.IsNotNull(deviceClient.Connection.ConnectionString);
+            string connectionString = "HostName=acme.azure-devices.net;X509Cert=true;DeviceId=device";
+            var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
         }
 
         [TestMethod]
         [TestCategory("CIT")]
-        public void DeviceClient_ConnectionString_DeviceScope_SharedAccessKeyCredentialType_Test()
+        public void DeviceClient_ConnectionString_X509Certificate_AmqpTest()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=Device;CredentialType=SharedAccessKey;DeviceId=device1;SharedAccessKey=CQN2K33r45/0WeIjpqmErV5EIvX8JZrozt3NEHCEkG8=";
-            var deviceClient = AmqpTransportHandler.CreateFromConnectionString(connectionString);
+            string hostName = "acme.azure-devices.net";
+            var cert = CertificateHelper.InstallCertificateFromFile(LocalCertFilename, LocalCertPasswordFile);
+            var authMethod = new DeviceAuthenticationWithX509Certificate("device1", cert);
 
-            Assert.IsNotNull(deviceClient.Connection);
-            Assert.IsNotNull(deviceClient.Connection.ConnectionString);
+            var deviceClient = DeviceClient.Create(hostName, authMethod, TransportType.Amqp);
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        public void DeviceClient_ConnectionString_X509Certificate_AmqpWsTest()
+        {
+            string hostName = "acme.azure-devices.net";
+            var cert = CertificateHelper.InstallCertificateFromFile(LocalCertFilename, LocalCertPasswordFile);
+            var authMethod = new DeviceAuthenticationWithX509Certificate("device1", cert);
+
+            var deviceClient = DeviceClient.Create(hostName, authMethod, TransportType.Amqp_WebSocket_Only);
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        public void DeviceClient_ConnectionString_X509Certificate_AmqpTcpTest()
+        {
+            string hostName = "acme.azure-devices.net";
+            var cert = CertificateHelper.InstallCertificateFromFile(LocalCertFilename, LocalCertPasswordFile);
+            var authMethod = new DeviceAuthenticationWithX509Certificate("device1", cert);
+
+            var deviceClient = DeviceClient.Create(hostName, authMethod, TransportType.Amqp_Tcp_Only);
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        public void DeviceClient_ConnectionString_X509Certificate_HttpTest()
+        {
+            string hostName = "acme.azure-devices.net";
+            var cert = CertificateHelper.InstallCertificateFromFile(LocalCertFilename, LocalCertPasswordFile);
+            var authMethod = new DeviceAuthenticationWithX509Certificate("device1", cert);
+
+            var deviceClient = DeviceClient.Create(hostName, authMethod, TransportType.Http1);
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void DeviceClient_ConnectionString_X509Certificate_MqttTest()
+        {
+            string hostName = "acme.azure-devices.net";
+            var cert = CertificateHelper.InstallCertificateFromFile(LocalCertFilename, LocalCertPasswordFile);
+            var authMethod = new DeviceAuthenticationWithX509Certificate("device1", cert);
+
+            var deviceClient = DeviceClient.Create(hostName, authMethod, TransportType.Mqtt);
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [ExpectedException(typeof(ArgumentException))]
+        public void DeviceClient_ConnectionString_X509Certificate_NullCertificateTest()
+        {
+            string hostName = "acme.azure-devices.net";
+            var authMethod = new DeviceAuthenticationWithX509Certificate("device1", null);
+
+            var deviceClient = DeviceClient.Create(hostName, authMethod, TransportType.Amqp_WebSocket_Only);
         }
 
         [TestMethod]

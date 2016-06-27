@@ -14,17 +14,17 @@
 #include "iothubtest.h"
 
 #include "serializer.h"
-#include "buffer_.h"
-#include "strings.h"
-#include "lock.h"
-#include "crt_abstractions.h"
-#include "threadapi.h"
+#include "azure_c_shared_utility/buffer_.h"
+#include "azure_c_shared_utility/strings.h"
+#include "azure_c_shared_utility/lock.h"
+#include "azure_c_shared_utility/crt_abstractions.h"
+#include "azure_c_shared_utility/threadapi.h"
 #include "iothubtransportamqp.h"
 #include "iothubtransporthttp.h"
 #include "MacroE2EModelAction.h"
 #include "iothub_client.h"
 
-#include "platform.h"
+#include "azure_c_shared_utility/platform.h"
 
 static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
 
@@ -305,7 +305,7 @@ BEGIN_TEST_SUITE(serializer_e2etests)
 
     TEST_SUITE_INITIALIZE(TestClassInitialize)
     {
-        INITIALIZE_MEMORY_DEBUG(g_dllByDll);
+        TEST_INITIALIZE_MEMORY_DEBUG(g_dllByDll);
         g_testByTest = MicroMockCreateMutex();
         ASSERT_IS_NOT_NULL(g_testByTest);
 
@@ -321,7 +321,7 @@ BEGIN_TEST_SUITE(serializer_e2etests)
         serializer_deinit();
 
         MicroMockDestroyMutex(g_testByTest);
-        DEINITIALIZE_MEMORY_DEBUG(g_dllByDll);
+        TEST_DEINITIALIZE_MEMORY_DEBUG(g_dllByDll);
     }
 
     TEST_FUNCTION_INITIALIZE(TestMethodInitialize)

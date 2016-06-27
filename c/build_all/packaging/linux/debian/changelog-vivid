@@ -1,4 +1,4 @@
-azure-iot-sdk-c (0.1.0-12) vivid; urgency=low
+azure-iot-sdk-c (0.1.0-16) vivid; urgency=low
 
   * Initial release
 
@@ -18,4 +18,12 @@ azure-iot-sdk-c (0.1.0-12) vivid; urgency=low
 
   * Introduce _setoption in modules which implement XIO interface (#e721b5c)
 
- -- AzureIoT User <aziotsdklinux@outlook.com>  Fri, 11 Mar 2016 17:24:51 +0000
+  * change the mqtt timeout from 5 min to 4 due to the service disconnect (#451ab96)
+
+  * Added a backoff for mqtt to not overload the network and enable sas token reset before expiration
+
+  * Initial implementation of SAS Token support as input in Device Connection String
+
+  * Fix tlsio_schannel bug (not all input bytes were being read) (#451ab97)
+
+ -- AzureIoT User <aziotsdklinux@outlook.com>  Fri, 20 May 2016 17:24:51 +0000

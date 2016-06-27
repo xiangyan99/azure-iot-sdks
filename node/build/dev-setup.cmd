@@ -4,6 +4,11 @@
 @setlocal
 @echo off
 
+if "%OPENSSL_CONF%"=="" (
+  echo The OPENSSL_CONF environment variable must be defined.
+  goto :eof
+)
+
 set node-root=%~dp0..
 REM // resolve to fully qualified path
 for %%i in ("%node-root%") do set node-root=%%~fi
@@ -81,9 +86,6 @@ cd %node-root%\e2etests
 echo.
 echo -- Creating links for %cd% --
 call npm link azure-iot-common
-call npm link azure-iot-amqp-base
-call npm link azure-iot-http-base
-call npm link azure-iot-mqtt-base
 call npm link azure-iot-device
 call npm link azure-iot-device-amqp
 call npm link azure-iot-device-amqp-ws
@@ -96,5 +98,11 @@ cd %node-root%\..\tools\iothub-explorer
 echo.
 echo -- Creating links for %cd% --
 call npm link azure-iot-common
+call npm link azure-iothub
+call npm install
+
+cd %node-root%\build\tools
+echo .
+echo -- Setting up links for build tools --
 call npm link azure-iothub
 call npm install

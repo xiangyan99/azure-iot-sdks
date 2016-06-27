@@ -7,22 +7,20 @@
 #endif
 
 #include <stdio.h>
-#include "string.h"
-#include "string_tokenizer.h"
+#include <string.h>
+#include "azure_c_shared_utility/string_tokenizer.h"
 #include "iothub_account.h"
 
-#include "httpapiexsas.h"
-#include "base64.h"
-#include "hmacsha256.h"
-#include "iot_logging.h"
-#include "sastoken.h"
+#include "azure_c_shared_utility/httpapiexsas.h"
+#include "azure_c_shared_utility/base64.h"
+#include "azure_c_shared_utility/hmacsha256.h"
+#include "azure_c_shared_utility/iot_logging.h"
+#include "azure_c_shared_utility/sastoken.h"
 
-#include "httpapiexsas.h"
-#include "base64.h"
-#include "hmacsha256.h"
-#include "iot_logging.h"
-#include "sastoken.h"
-#include "uniqueid.h"
+#include "azure_c_shared_utility/httpapiexsas.h"
+#include "azure_c_shared_utility/base64.h"
+#include "azure_c_shared_utility/iot_logging.h"
+#include "azure_c_shared_utility/uniqueid.h"
 
 #ifdef MBED_BUILD_TIMESTAMP
 #define MBED_PARAM_MAX_LENGTH 256
@@ -162,7 +160,7 @@ static int generateDeviceName(IOTHUB_ACCOUNT_INFO* accountInfo, const char* call
             }
             else
             {
-                LogInfo("Created Device %s.\r\n", accountInfo->deviceId);
+                LogInfo("Created Device %s.", accountInfo->deviceId);
                 result = 0;
             }
         }
@@ -407,6 +405,7 @@ static int retrieveConnStringInfo(IOTHUB_ACCOUNT_INFO* accountInfo)
             accountInfo->hostname[endHost - beginHost] = '.';
             if (mallocAndStrcpy_s(&accountInfo->iothubSuffix, accountInfo->hostname + endHost - beginHost + 1) != 0)
             {
+				LogError("[IoTHubAccount] Failure constructing the iothubSuffix.");
                 free(accountInfo->iothubName);
                 free(accountInfo->hostname);
                 free(accountInfo->keyName);
@@ -422,15 +421,37 @@ static int retrieveConnStringInfo(IOTHUB_ACCOUNT_INFO* accountInfo)
     return result;
 }
 
+#ifdef MBED_BUILD_TIMESTAMP
+static const char* getMbedParameter(const char* name)
+{
+	static char value[MBED_PARAM_MAX_LENGTH];
+	(void)printf("%s?\r\n", name);
+	(void)scanf("%s", &value);
+	(void)printf("Received '%s'\r\n", value);				
+
+    return value;	
+}
+#endif
+
 IOTHUB_ACCOUNT_INFO_HANDLE IoTHubAccount_Init(bool createDevice, const char* callerName)
 {
     IOTHUB_ACCOUNT_INFO* result = malloc(sizeof(IOTHUB_ACCOUNT_INFO));
-    if (result != NULL)
-    {
+	if (result == NULL)
+	{
+		LogError("[IoTHubAccount] Failed allocating IOTHUB_ACCOUNT_INFO.");
+	}
+	else
+	{
         memset(result, 0, sizeof(IOTHUB_ACCOUNT_INFO));
+		
+#ifdef MBED_BUILD_TIMESTAMP
+		result->connString = getMbedParameter("IOTHUB_CONNECTION_STRING");
+		result->eventhubConnString = getMbedParameter("IOTHUB_EVENTHUB_CONNECTION_STRING");
+#else
         result->connString = getenv("IOTHUB_CONNECTION_STRING");
         result->eventhubConnString = getenv("IOTHUB_EVENTHUB_CONNECTION_STRING");
-
+#endif
+		
         if (result->connString == NULL || result->eventhubConnString == NULL)
         {
             LogError("Failure retrieving Connection Strings values.\r\n");
@@ -446,8 +467,10 @@ IOTHUB_ACCOUNT_INFO_HANDLE IoTHubAccount_Init(bool createDevice, const char* cal
             }
             else if (createDevice)
             {
-                if (create_Device(result, callerName) != 0)
+				int create_device_result;
+                if ((create_device_result = create_Device(result, callerName)) != 0)
                 {
+					LogError("Failed creating IoT device (%d)", create_device_result);
                     IoTHubAccount_deinit((IOTHUB_ACCOUNT_INFO_HANDLE)result);
                     result = NULL;
                 }
@@ -477,13 +500,6 @@ void IoTHubAccount_deinit(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
 
 const char* IoTHubAccount_GetEventHubConnectionString(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
 {
-#ifdef MBED_BUILD_TIMESTAMP
-    static char* value[MBED_PARAM_MAX_LENGTH];
-    (void)mbed_log("EventHubConnectionString?\r\n");
-    (void)scanf("%s", &value);
-    (void)mbed_log("Received '%s'\r\n", value);
-    return value;
-#else
     const char* result = NULL;
     IOTHUB_ACCOUNT_INFO* acctInfo = (IOTHUB_ACCOUNT_INFO*)acctHandle;
     if (acctInfo != NULL)
@@ -491,7 +507,6 @@ const char* IoTHubAccount_GetEventHubConnectionString(IOTHUB_ACCOUNT_INFO_HANDLE
         result = acctInfo->eventhubConnString;
     }
     return result;
-#endif
 }
 
 const char* IoTHubAccount_GetIoTHubName(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
@@ -518,26 +533,29 @@ const char* IoTHubAccount_GetIoTHubSuffix(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
 
 const char* IoTHubAccount_GetEventhubListenName(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
 {
-#ifdef MBED_BUILD_TIMESTAMP
-    static char* value[MBED_PARAM_MAX_LENGTH];
-    (void)mbed_log("EventhubListenName?\r\n");
-    (void)scanf("%s", &value);
-    (void)mbed_log("Received '%s'\r\n", value);
-    return value;
+	static char listenName[64];  
+	const char* value;
+	
+#ifndef MBED_BUILD_TIMESTAMP
+	if ((value = getenv("IOTHUB_EVENTHUB_LISTEN_NAME")) == NULL)
 #else
-    return IoTHubAccount_GetIoTHubName(acctHandle);
+	if ((value = getMbedParameter("IOTHUB_EVENTHUB_LISTEN_NAME")) == NULL)
 #endif
+	{
+		value = IoTHubAccount_GetIoTHubName(acctHandle); 
+	}
+
+	if (value != NULL &&
+		sprintf_s(listenName, 64, "%s", value) <= 0)
+	{
+		LogError("Failed reading IoT Hub Event Hub listen namespace (sprintf_s failed).");
+	}
+    
+	return listenName;
 }
 
 const char* IoTHubAccount_GetDeviceId(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
 {
-#ifdef MBED_BUILD_TIMESTAMP
-    static char* value[MBED_PARAM_MAX_LENGTH];
-    (void)mbed_log("DeviceId?\r\n");
-    (void)scanf("%s", &value);
-    (void)mbed_log("Received '%s'\r\n", value);
-    return value;
-#else
     if (acctHandle != NULL)
     {
         return ((IOTHUB_ACCOUNT_INFO*)acctHandle)->deviceId;
@@ -546,18 +564,10 @@ const char* IoTHubAccount_GetDeviceId(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
     {
         return NULL;
     }
-#endif
 }
 
 const char* IoTHubAccount_GetDeviceKey(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
 {
-#ifdef MBED_BUILD_TIMESTAMP
-    static char* value[MBED_PARAM_MAX_LENGTH];
-    (void)mbed_log("DeviceKey?\r\n");
-    (void)scanf("%s", &value);
-    (void)mbed_log("Received '%s'\r\n", value);
-    return value;
-#else
     if (acctHandle != NULL)
     {
         return ((IOTHUB_ACCOUNT_INFO*)acctHandle)->deviceKey;
@@ -566,18 +576,10 @@ const char* IoTHubAccount_GetDeviceKey(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
     {
         return NULL;
     }
-#endif
 }
 
 const char* IoTHubAccount_GetIoTHubConnString(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
 {
-#ifdef MBED_BUILD_TIMESTAMP
-    static char* value[MBED_PARAM_MAX_LENGTH];
-    (void)mbed_log("IoTHubConnString?\r\n");
-    (void)scanf("%s", &value);
-    (void)mbed_log("Received '%s'\r\n", value);
-    return value;
-#else
     if (acctHandle != NULL)
     {
         return ((IOTHUB_ACCOUNT_INFO*)acctHandle)->connString;
@@ -586,21 +588,10 @@ const char* IoTHubAccount_GetIoTHubConnString(IOTHUB_ACCOUNT_INFO_HANDLE acctHan
     {
         return NULL;
     }
-#endif
 }
 
 const char* IoTHubAccount_GetSharedAccessSignature(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
 {
-#ifdef MBED_BUILD_TIMESTAMP
-    char tempValue[MBED_PARAM_MAX_LENGTH];
-    static char value[MBED_PARAM_MAX_LENGTH];
-
-    (void)mbed_log("SharedAccessSignature?\r\n");
-    (void)scanf("%s", &tempValue);
-    (void)sprintf(value, "SharedAccessSignature %s", tempValue);
-    (void)mbed_log("Received '%s'\r\n", value);
-    return &value;
-#else
     const char* result = NULL;
     IOTHUB_ACCOUNT_INFO* acctInfo = (IOTHUB_ACCOUNT_INFO*)acctHandle;
     if (acctInfo != NULL)
@@ -649,7 +640,6 @@ const char* IoTHubAccount_GetSharedAccessSignature(IOTHUB_ACCOUNT_INFO_HANDLE ac
         result = NULL;
     }
     return result; 
-#endif
 }
 
 const char* IoTHubAccount_GetEventhubAccessKey(IOTHUB_ACCOUNT_INFO_HANDLE acctHandle)
@@ -712,11 +702,7 @@ const char* IoTHubAccount_GetEventhubConsumerGroup(IOTHUB_ACCOUNT_INFO_HANDLE ac
 {
     (void)acctHandle;
 #ifdef MBED_BUILD_TIMESTAMP
-    static char* value[MBED_PARAM_MAX_LENGTH];
-    (void)mbed_log("EventhubConsumerGroup?\r\n");
-    (void)scanf("%s", &value);
-    (void)mbed_log("Received '%s'\r\n", value);
-    return value;
+    return getMbedParameter("IOTHUB_EVENTHUB_CONSUMER_GROUP");
 #else
     static char consumerGroup[64];
     char *envVarValue = getenv("IOTHUB_EVENTHUB_CONSUMER_GROUP");
@@ -737,9 +723,11 @@ const size_t IoTHubAccount_GetIoTHubPartitionCount(IOTHUB_ACCOUNT_INFO_HANDLE ac
     int value;
     (void)acctHandle;
 #ifdef MBED_BUILD_TIMESTAMP
-    (void)mbed_log("EventHubPartitionCount?\r\n");
-    (void)scanf("%i", &value);
-    (void)mbed_log("Received '%i'\r\n", value);
+	char* str_value;
+	if ((str_value = getMbedParameter("IOTHUB_PARTITION_COUNT")) != NULL)
+	{
+		sscanf(str_value, "%i", &value);
+	}
 #else
     char *envVarValue = getenv("IOTHUB_PARTITION_COUNT");
     if (envVarValue != NULL)

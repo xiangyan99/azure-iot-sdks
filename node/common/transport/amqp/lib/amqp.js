@@ -77,8 +77,7 @@ function Amqp(saslPlainUri, autoSettleMessages, sdkVersionString) {
     debug('Error received from node-amqp10: ' + err.message);
   }.bind(this));
 
-  this._receiverPromise = null;
-  this._receiver = null;
+  this._receivers = {};
   this._sender = null;
   this._connected = false;
 
@@ -108,7 +107,7 @@ Amqp.prototype.connect = function connect(done) {
       .catch(function (err) {
         this._connected = false;
         /*Codes_SRS_NODE_COMMON_AMQP_16_003: [The connect method shall call the done callback if the connection fails.] */
-        if (done) done(translateError(err));
+        if (done) done(err);
       }.bind(this));
   } else {
     debug('connect called when already connected.');
@@ -176,7 +175,7 @@ Amqp.prototype.send = function send(message, endpoint, to, done) {
       })
       .catch(function (err) {
         /*Codes_SRS_NODE_IOTHUB_AMQPCOMMON_16_007: [If sendEvent encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
-        if (done) done(translateError(err));
+        if (done) done(err);
       });
   };
 
@@ -186,7 +185,7 @@ Amqp.prototype.send = function send(message, endpoint, to, done) {
         this._sender = sender;
         /*Codes_SRS_NODE_COMMON_AMQP_16_007: [If send encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
         this._sender.on('errorReceived', function (err) {
-          if (done) done(translateError(err));
+          if (done) done(err);
           return null;
         });
 
@@ -207,52 +206,25 @@ Amqp.prototype.send = function send(message, endpoint, to, done) {
  */
 Amqp.prototype.getReceiver = function getReceiver(endpoint, done) {
   /*Codes_SRS_NODE_COMMON_AMQP_16_010: [If a receiver for this endpoint doesn’t exist, the getReceiver method should create a new AmqpReceiver object and then call the done() method with the object that was just created as an argument.] */
-  if (!this._receiver) {
+  if (!this._receivers[endpoint]) {
     this._setupReceiverLink(endpoint, done);
   }
   else {
     /*Codes_SRS_NODE_COMMON_AMQP_16_009: [If a receiver for this endpoint has already been created, the getReceiver method should call the done() method with the existing instance as an argument.] */
-    done(null, this._receiver);
+    done(null, this._receivers[endpoint]);
   }
 };
 
 Amqp.prototype._setupReceiverLink = function setupReceiverLink(endpoint, done) {
-  if (!this._receiverPromise) this._receiverPromise = this._amqp.createReceiver(endpoint);
-
-  this._receiverPromise
+  this._amqp.createReceiver(endpoint)
     .then(function (receiver) {
-      this._receiver = new AmqpReceiver(receiver);
-      debug('AmqpReceiver object created');
-      done(null, this._receiver);
+      this._receivers[endpoint] = new AmqpReceiver(receiver);
+      debug('AmqpReceiver object created for endpoint: ' + endpoint);
+      done(null, this._receivers[endpoint]);
     }.bind(this))
     .catch(function (err) {
-      if (done) done(translateError(err));
+      if (done) done(err);
     });
 };
-
-function translateError(err) {
-  var error = err;
-
-  if (err.constructor.name === 'AMQPError') {
-    if (err.condition.contents === 'amqp:resource-limit-exceeded') {
-      error = new errors.DeviceMaximumQueueDepthExceededError(err.description);
-    }
-    else if (err.condition.contents === 'amqp:not-found') {
-      error = new errors.DeviceNotFoundError(err.description);
-    }
-    else if (err.condition.contents === 'amqp:unauthorized-access') {
-      error = new errors.UnauthorizedError(err.description);
-    }
-    else {
-      error = new Error(err.description);
-    }
-    error.transport = err;
-  }
-  else if (err instanceof amqp10.Errors.AuthenticationError) {
-    error = new errors.UnauthorizedError(err.message);
-  }
-
-  return error;
-}
 
 module.exports = Amqp;

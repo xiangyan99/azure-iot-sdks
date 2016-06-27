@@ -52,7 +52,7 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
         [ExpectedException(typeof(ArgumentException))]
         public void DeviceClient_ConnectionString_IotHubScope_SharedAccessSignatureCredentialType_MissingSharedAccessKey_ExceptionTest()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=IotHub;CredentialType=SharedAccessSignature;DeviceId=device1;SharedAccessKeyName=AllAccessKey";
+            string connectionString = "HostName=acme.azure-devices.net;DeviceId=device1;SharedAccessKeyName=AllAccessKey";
             var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
         }
 
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
         [ExpectedException(typeof(ArgumentException))]
         public void DeviceClient_ConnectionString_IotHubScope_SharedAccessKeyCredentialType_MissingSharedAccessKeyNameAndKey_ExceptionTest()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=IotHub;CredentialType=SharedAccessKey;DeviceId=device1";
+            string connectionString = "HostName=acme.azure-devices.net;DeviceId=device1";
             var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
         }
 
@@ -70,7 +70,7 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
         [ExpectedException(typeof(ArgumentException))]
         public void DeviceClient_ConnectionString_DeviceScope_SharedAccessKeyCredentialType_MissingSharedAccessKey_ExceptionTest()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=Device;CredentialType=SharedAccessKey;DeviceId=device1";
+            string connectionString = "HostName=acme.azure-devices.net;CredentialType=SharedAccessKey;DeviceId=device1";
             var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
         }
 
@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
         [ExpectedException(typeof(ArgumentException))]
         public void DeviceClient_ConnectionString_DeviceScope_SharedAccessKeyCredentialType_NotAllowedSharedAccessKeyName_ExceptionTest()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=Device;CredentialType=SharedAccessKey;SharedAccessKeyName=AllAccessKey;DeviceId=device1";
+            string connectionString = "HostName=acme.azure-devices.net;SharedAccessKeyName=AllAccessKey;DeviceId=device1";
             var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
         }
 
@@ -88,7 +88,7 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
         [ExpectedException(typeof(FormatException))]
         public void DeviceClient_ConnectionString_DeviceScope_SharedAccessSignatureCredentialType_InvalidSharedAccessKey_ExceptionTest()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=Device;CredentialType=SharedAccessKey;SharedAccessKey=INVALID;DeviceId=device1";
+            string connectionString = "HostName=acme.azure-devices.net;SharedAccessKey=INVALID;DeviceId=device1";
             var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
         }
 
@@ -112,7 +112,7 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
         [ExpectedException(typeof(FormatException))]
         public void DeviceClient_ConnectionString_DeviceScope_ImplicitSharedAccessSignatureCredentialType_InvalidSharedAccessSignature_ExceptionTest()
         {
-            string connectionString = "HostName=acme.azure-devices.net;CredentialScope=Device;CredentialType=SharedAccessKey;SharedAccessSignature=INVALID;DeviceId=device1";
+            string connectionString = "HostName=acme.azure-devices.net;SharedAccessSignature=INVALID;DeviceId=device1";
             var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
         }
 
@@ -131,6 +131,33 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
         public void DeviceClient_ConnectionString_NullConnectionString_ExceptionTest()
         {
             string connectionString = null;
+            var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [ExpectedException(typeof(ArgumentException))]
+        public void DeviceClient_ConnectionString_SASKey_X509CertExceptionTest()
+        {
+            string connectionString = "HostName=acme.azure-devices.net;X509Cert=true;DeviceId=device;SharedAccessKey=CQN2K33r45/0WeIjpqmErV5EIvX8JZrozt3NEHCEkG8=";
+            var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [ExpectedException(typeof(ArgumentException))]
+        public void DeviceClient_ConnectionString_SASSignature_X509ExceptionTest()
+        {
+            string connectionString = "HostName=acme.azure-devices.net;DeviceId=device1;X509Cert=true;SharedAccessSignature=SharedAccessSignature sr=dh%3a%2f%2facme.azure-devices.net&sig=poifbMLdBGtCJknubF2FW6FLn5vND5k1IKoeQ%2bONgkE%3d&se=87824124985&skn=AllAccessKey";
+            var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
+        }
+
+        [TestMethod]
+        [TestCategory("CIT")]
+        [ExpectedException(typeof(ArgumentException))]
+        public void DeviceClient_ConnectionString_X509Cert_False_Test()
+        {
+            string connectionString = "HostName=acme.azure-devices.net;X509Cert=false;DeviceId=device";
             var deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
         }
     }

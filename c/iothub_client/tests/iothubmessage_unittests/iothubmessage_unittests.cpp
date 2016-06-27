@@ -10,10 +10,10 @@
 #include "micromock.h"
 #include "micromockcharstararenullterminatedstrings.h"
 #include "iothub_message.h"
-#include "buffer_.h"
-#include "strings.h"
-#include "lock.h"
-#include "map.h"
+#include "azure_c_shared_utility/buffer_.h"
+#include "azure_c_shared_utility/strings.h"
+#include "azure_c_shared_utility/lock.h"
+#include "azure_c_shared_utility/map.h"
 
 static MICROMOCK_MUTEX_HANDLE g_testByTest;
 
@@ -393,7 +393,7 @@ BEGIN_TEST_SUITE(iothubmessage_unittests)
 
     TEST_SUITE_INITIALIZE(TestClassInitialize)
     {
-        INITIALIZE_MEMORY_DEBUG(g_dllByDll);
+        TEST_INITIALIZE_MEMORY_DEBUG(g_dllByDll);
         g_testByTest = MicroMockCreateMutex();
         ASSERT_IS_NOT_NULL(g_testByTest);
     }
@@ -401,7 +401,7 @@ BEGIN_TEST_SUITE(iothubmessage_unittests)
     TEST_SUITE_CLEANUP(TestClassCleanup)
     {
         MicroMockDestroyMutex(g_testByTest);
-        DEINITIALIZE_MEMORY_DEBUG(g_dllByDll);
+        TEST_DEINITIALIZE_MEMORY_DEBUG(g_dllByDll);
     }
 
     TEST_FUNCTION_INITIALIZE(TestMethodInitialize)

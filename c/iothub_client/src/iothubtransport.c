@@ -6,19 +6,19 @@
 #include <crtdbg.h>
 #endif
 
-#include "gballoc.h"
+#include "azure_c_shared_utility/gballoc.h"
 
 #include <stdlib.h>
 #include <signal.h>
 #include <stddef.h>
-#include "crt_abstractions.h"
+#include "azure_c_shared_utility/crt_abstractions.h"
 #include "iothubtransport.h"
 #include "iothub_client.h"
 #include "iothub_client_private.h"
-#include "threadapi.h"
-#include "lock.h"
-#include "iot_logging.h"
-#include "vector.h"
+#include "azure_c_shared_utility/threadapi.h"
+#include "azure_c_shared_utility/lock.h"
+#include "azure_c_shared_utility/iot_logging.h"
+#include "azure_c_shared_utility/vector.h"
 
 typedef struct TRANSPORT_HANDLE_DATA_TAG
 {
@@ -109,6 +109,7 @@ TRANSPORT_HANDLE  IoTHubTransport_Create(IOTHUB_CLIENT_TRANSPORT_PROVIDER protoc
 						/*Codes_SRS_IOTHUBTRANSPORT_17_001: [ IoTHubTransport_Create shall return a non-NULL handle on success.]*/
 						result->stopThread = 1;
 						result->workerThreadHandle = NULL; /* create thread when work needs to be done */
+                        result->IoTHubTransport_GetHostname = transportProtocol->IoTHubTransport_GetHostname;
 						result->IoTHubTransport_SetOption = transportProtocol->IoTHubTransport_SetOption;
 						result->IoTHubTransport_Create = transportProtocol->IoTHubTransport_Create;
 						result->IoTHubTransport_Destroy = transportProtocol->IoTHubTransport_Destroy;
@@ -257,12 +258,12 @@ static bool signal_end_worker_thread(TRANSPORT_HANDLE_DATA * transportData, IOTH
 	return okToJoin;
 }
 
-void IoTHubTransport_Destroy(TRANSPORT_HANDLE transportHlHandle)
+void IoTHubTransport_Destroy(TRANSPORT_HANDLE transportHandle)
 {
-	/*Codes_SRS_IOTHUBTRANSPORT_17_011: [ IoTHubTransport_Destroy shall do nothing if transportHlHandle is NULL. ]*/
-	if (transportHlHandle != NULL)
+	/*Codes_SRS_IOTHUBTRANSPORT_17_011: [ IoTHubTransport_Destroy shall do nothing if transportHandle is NULL. ]*/
+	if (transportHandle != NULL)
 	{
-		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHlHandle;
+		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHandle;
 		/*Codes_SRS_IOTHUBTRANSPORT_17_033: [ IoTHubTransport_Destroy shall lock the transport lock. ]*/
 		if (Lock(transportData->lockHandle) != LOCK_OK)
 		{
@@ -279,56 +280,56 @@ void IoTHubTransport_Destroy(TRANSPORT_HANDLE transportHlHandle)
 		Lock_Deinit(transportData->lockHandle);
 		(transportData->IoTHubTransport_Destroy)(transportData->transportLLHandle);
 		VECTOR_destroy(transportData->clients);
-		free(transportHlHandle);
+		free(transportHandle);
 	}
 }
 
-LOCK_HANDLE IoTHubTransport_GetLock(TRANSPORT_HANDLE transportHlHandle)
+LOCK_HANDLE IoTHubTransport_GetLock(TRANSPORT_HANDLE transportHandle)
 {
 	LOCK_HANDLE lock;
-	if (transportHlHandle == NULL)
+	if (transportHandle == NULL)
 	{
-		/*Codes_SRS_IOTHUBTRANSPORT_17_013: [ If transportHlHandle is NULL, IoTHubTransport_GetLock shall return NULL. ]*/
+		/*Codes_SRS_IOTHUBTRANSPORT_17_013: [ If transportHandle is NULL, IoTHubTransport_GetLock shall return NULL. ]*/
 		lock = NULL;
 	}
 	else
 	{
 		/*Codes_SRS_IOTHUBTRANSPORT_17_012: [ IoTHubTransport_GetLock shall return a handle to the transport lock. ]*/
-		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHlHandle;
+		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHandle;
 		lock = transportData->lockHandle;
 	}
 	return lock;
 }
 
-TRANSPORT_LL_HANDLE IoTHubTransport_GetLLTransport(TRANSPORT_HANDLE transportHlHandle)
+TRANSPORT_LL_HANDLE IoTHubTransport_GetLLTransport(TRANSPORT_HANDLE transportHandle)
 {
 	TRANSPORT_LL_HANDLE llTransport;
-	if (transportHlHandle == NULL)
+	if (transportHandle == NULL)
 	{
-		/*Codes_SRS_IOTHUBTRANSPORT_17_015: [ If transportHlHandle is NULL, IoTHubTransport_GetLLTransport shall return NULL. ]*/
+		/*Codes_SRS_IOTHUBTRANSPORT_17_015: [ If transportHandle is NULL, IoTHubTransport_GetLLTransport shall return NULL. ]*/
 		llTransport = NULL;
 	}
 	else
 	{
 		/*Codes_SRS_IOTHUBTRANSPORT_17_014: [ IoTHubTransport_GetLLTransport shall return a handle to the lower layer transport. ]*/
-		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHlHandle;
+		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHandle;
 		llTransport = transportData->transportLLHandle;
 	}
 	return llTransport;
 }
 
-IOTHUB_CLIENT_RESULT IoTHubTransport_StartWorkerThread(TRANSPORT_HANDLE transportHlHandle, IOTHUB_CLIENT_HANDLE clientHandle)
+IOTHUB_CLIENT_RESULT IoTHubTransport_StartWorkerThread(TRANSPORT_HANDLE transportHandle, IOTHUB_CLIENT_HANDLE clientHandle)
 {
 	IOTHUB_CLIENT_RESULT result;
-	if (transportHlHandle == NULL || clientHandle == NULL)
+	if (transportHandle == NULL || clientHandle == NULL)
 	{
-		/*Codes_SRS_IOTHUBTRANSPORT_17_016: [ If transportHlHandle is NULL, IoTHubTransport_StartWorkerThread shall return IOTHUB_CLIENT_INVALID_ARG. ]*/
+		/*Codes_SRS_IOTHUBTRANSPORT_17_016: [ If transportHandle is NULL, IoTHubTransport_StartWorkerThread shall return IOTHUB_CLIENT_INVALID_ARG. ]*/
 		/*Codes_SRS_IOTHUBTRANSPORT_17_017: [ If clientHandle is NULL, IoTHubTransport_StartWorkerThread shall return IOTHUB_CLIENT_INVALID_ARG. ]*/
 		result = IOTHUB_CLIENT_INVALID_ARG;
 	}
 	else
 	{
-		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHlHandle;
+		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHandle;
 
 		if ((result = start_worker_if_needed(transportData, clientHandle)) != IOTHUB_CLIENT_OK)
 		{
@@ -344,14 +345,14 @@ IOTHUB_CLIENT_RESULT IoTHubTransport_StartWorkerThread(TRANSPORT_HANDLE transpor
 	return result;
 }
 
-bool IoTHubTransport_SignalEndWorkerThread(TRANSPORT_HANDLE transportHlHandle, IOTHUB_CLIENT_HANDLE clientHandle)
+bool IoTHubTransport_SignalEndWorkerThread(TRANSPORT_HANDLE transportHandle, IOTHUB_CLIENT_HANDLE clientHandle)
 {
 	bool okToJoin;
-	/*Codes_SRS_IOTHUBTRANSPORT_17_023: [ If transportHlHandle is NULL, IoTHubTransport_EndWorkerThread shall return. ]*/
+	/*Codes_SRS_IOTHUBTRANSPORT_17_023: [ If transportHandle is NULL, IoTHubTransport_EndWorkerThread shall return. ]*/
 	/*Codes_SRS_IOTHUBTRANSPORT_17_024: [ If clientHandle is NULL, IoTHubTransport_EndWorkerThread shall return. ]*/
-	if (!(transportHlHandle == NULL || clientHandle == NULL))
+	if (!(transportHandle == NULL || clientHandle == NULL))
 	{
-		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHlHandle;
+		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHandle;
 		okToJoin = signal_end_worker_thread(transportData, clientHandle);
 	}
 	else
@@ -361,13 +362,13 @@ bool IoTHubTransport_SignalEndWorkerThread(TRANSPORT_HANDLE transportHlHandle, I
 	return okToJoin;
 }
 
-void IoTHubTransport_JoinWorkerThread(TRANSPORT_HANDLE transportHlHandle, IOTHUB_CLIENT_HANDLE clientHandle)
+void IoTHubTransport_JoinWorkerThread(TRANSPORT_HANDLE transportHandle, IOTHUB_CLIENT_HANDLE clientHandle)
 {
-	/*Codes_SRS_IOTHUBTRANSPORT_17_044: [ If transportHlHandle is NULL, IoTHubTransport_JoinWorkerThread shall do nothing. ]*/
+	/*Codes_SRS_IOTHUBTRANSPORT_17_044: [ If transportHandle is NULL, IoTHubTransport_JoinWorkerThread shall do nothing. ]*/
 	/*Codes_SRS_IOTHUBTRANSPORT_17_045: [ If clientHandle is NULL, IoTHubTransport_JoinWorkerThread shall do nothing. ]*/
-	if (!(transportHlHandle == NULL || clientHandle == NULL))
+	if (!(transportHandle == NULL || clientHandle == NULL))
 	{
-		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHlHandle;
+		TRANSPORT_HANDLE_DATA * transportData = (TRANSPORT_HANDLE_DATA*)transportHandle;
 		/*Codes_SRS_IOTHUBTRANSPORT_17_027: [ The worker thread shall be joined. ]*/
 		wait_worker_thread(transportData);
 	}
